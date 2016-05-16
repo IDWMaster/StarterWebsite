@@ -1,0 +1,17 @@
+﻿@model GetStartedApplication.Models.KeySetup
+@{
+    ViewBag.Title = "setupKey";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#mform').submit();
+    });
+</script>
+<h2>Provisioning key on server. Please wait....</h2>
+<hr />
+If you see this message for longer than a few seconds; you probably need to check your browser or your Internet connection.
+<form id="mform" action="@IDWReg.PortalAddKeyUrl" method="post">
+    <input type="hidden" name="key" value="@Model.pubkey" />
+    <input type="hidden" name="redirURL" value="http://@(Request.Url.Host+":"+Request.Url.Port)" />
+</form>
