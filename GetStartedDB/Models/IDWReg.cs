@@ -1,7 +1,11 @@
-﻿using System;
+﻿using IDWDBClient;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Web;
+
 public class IDWReg
 {
     public static string AccountFriendlyName = "%accountname%";
@@ -9,10 +13,135 @@ public class IDWReg
     public static string PortalAddKeyUrl = "https://idwnetcloudcomputing.com/Portal/AddKey";
     public static string key_path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)+"\\rsa";
     public static string Endpoint = "idwnetcloudcomputing.com";
+    static byte[] _priv;
+    public static byte[] ClientKey
+    {
+        get
+        {
+            if(_priv == null)
+            {
+                _priv = System.IO.File.ReadAllBytes(key_path);
+
+            }
+            return _priv;
+        }
+    }
 }
+
+
 
 namespace GetStartedApplication.Models
 {
+    public class PasswordAndConfirmMatch : ValidationAttribute
+    {
+
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            dynamic duo = validationContext.ObjectInstance;
+            if (duo.Password != duo.ConfirmPassword)
+            {
+                return new ValidationResult("Password and confirm password must match.");
+            }
+            return ValidationResult.Success;
+        }
+    }
+    public class UserDoesNotExist : ValidationAttribute
+    {
+        public UserDoesNotExist()
+        {
+        }
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+
+            string username = (value as string).ToLower();
+
+            bool found = false;
+            using (DatabaseClient client = new DatabaseClient(IDWReg.Endpoint,IDWReg.ServerKey,IDWReg.ClientKey))
+            {
+                var ctx = System.Threading.SynchronizationContext.Current;
+                System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+                client.ConnectAsync().Wait();
+                var tsk = IDWDBClient.DBQuery.CreateTableQuery("users").PointRetrieve(new string[] { username }).Execute(client, (rows) => {
+                    found = true;
+                    return true;
+                });
+                tsk.Wait();
+                System.Threading.SynchronizationContext.SetSynchronizationContext(ctx);
+            }
+            return found ? new ValidationResult("User already exists.") : ValidationResult.Success;
+        }
+    }
+    public class ValidCredentials : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            dynamic duo = validationContext.ObjectInstance;
+            string username = duo.UserName.ToLower();
+            string Password = duo.Password;
+            DataRow boat = null;
+            using (DatabaseClient client = new IDWDBClient.DatabaseClient(IDWReg.Endpoint,IDWReg.ServerKey,IDWReg.ClientKey))
+            {
+                var ctx = System.Threading.SynchronizationContext.Current;
+                System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+                client.ConnectAsync().Wait();
+                var tsk = IDWDBClient.DBQuery.CreateTableQuery("users").PointRetrieve(new string[] { username }).Execute(client, (rows) => {
+                    boat = rows.First();
+                    return true;
+                });
+                tsk.Wait();
+                System.Threading.SynchronizationContext.SetSynchronizationContext(ctx);
+            }
+            ValidationResult msg = new ValidationResult("The user name or password is 'incorrect'.");
+            if (boat == null)
+            {
+                return msg;
+            }
+            using (Rfc2898DeriveBytes mderive = new Rfc2898DeriveBytes(Password, boat["Salt"].Value as byte[]))
+            {
+                byte[] s = mderive.GetBytes(32);
+                byte[] realPassword = boat["Password"].Value as byte[];
+
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (s[i] != realPassword[i])
+                    {
+                        return msg;
+                    }
+                }
+            }
+            return ValidationResult.Success;
+        }
+    }
+    public class LoginScreen
+    {
+        [Required]
+        [ValidCredentials]
+        [Display(Name = "User Name")]
+        public string UserName { get; set; }
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+    }
+    public class CreateAccountScreen
+    {
+        [Required]
+        [UserDoesNotExist]
+        [Display(Name ="User name")]
+        public string UserName { get; set; }
+        [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+        [Required]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
+        
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+        [PasswordAndConfirmMatch]
+        [Display(Name ="Confirm Password")]
+        [DataType(DataType.Password)]
+        public string ConfirmPassword { get; set; }
+    }
     public class KeySetup
     {
         public string pubkey;

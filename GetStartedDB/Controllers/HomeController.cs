@@ -5,6 +5,9 @@ using System.Web;
 using System.Web.Mvc;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using GetStartedApplication.Models;
+using IDWDBClient;
+
 namespace GetStartedDB.Controllers
 {
     public class HomeController : SController
@@ -15,6 +18,62 @@ namespace GetStartedDB.Controllers
             System.Diagnostics.Process.Start(Request.PhysicalApplicationPath + "\\Models\\IDWReg.cs");
             return Content("OK");
         }
+
+
+        public ActionResult Login()
+        {
+
+            return View();
+        }
+
+        [ValidateAntiForgeryToken]
+        [ValidateInput(true)]
+        [HttpPost]
+        public async Task<ActionResult> Login(LoginScreen screen)
+        {
+            if (ModelState.IsValid)
+            {
+                DataRow session = await GetSession();
+                session.AddColumn("UserName", screen.UserName.ToLower());
+                await UpdateSession(session);
+                return RedirectToAction("Index");
+            }
+            return View(screen);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ValidateInput(true)]
+        public async Task<ActionResult> CreateAccount(CreateAccountScreen reg)
+        {
+            if (this.ModelState.IsValid)
+            {
+                using (RandomNumberGenerator rng = new RNGCryptoServiceProvider())
+                {
+                    byte[] salt = new byte[32];
+                    rng.GetBytes(salt);
+                    Rfc2898DeriveBytes mderive = new Rfc2898DeriveBytes(reg.Password, salt);
+                    byte[] password = mderive.GetBytes(32);
+                    using (DatabaseClient client = await DBConnect())
+                    {
+                        await client.ConnectAsync();
+                        await IDWDBClient.DBQuery.CreateTableQuery("users").InsertOrUpdate(new IDWDBClient.DataRow[] { new IDWDBClient.DataRow() { PK = reg.UserName.ToLower() }.AddColumn("FirstName", reg.FirstName).AddColumn("LastName", reg.LastName).AddColumn("Password", password).AddColumn("Salt", salt) }).Execute(client, (rows) => true);
+                        DataRow session = await GetSession();
+                        session.AddColumn("UserName", reg.UserName.ToLower());
+                        await UpdateSession(session);
+                        return RedirectToAction("index");
+                    }
+                }
+            }
+            return View(reg);
+        }
+
+        public ActionResult CreateAccount()
+        {
+            return View();
+        }
+
+
         public ActionResult setupKey()
         {
             string cb = "";
@@ -34,8 +93,8 @@ namespace GetStartedDB.Controllers
         {
             try
             {
-                await DBConnect();
-                return View();
+                (await DBConnect()).Dispose();
+                return View(await GetCurrentUser());
             }catch(Exception er)
             {
                 return RedirectToAction("setupKey");
