@@ -1,31 +1,37 @@
 ﻿@{
     ViewBag.Title = "Home Page";
 }
-
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#openbtn').click(function () {
+            $.get('@Url.Action("OpenReg")')
+        });
+    });
+</script>
 <div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+    <h2>Hello, @IDWReg.AccountFriendlyName! Welcome to IDWDB!</h2>
+    <p class="lead">IDWDB is a highly-scalable, performant, easy-to-use NoSQL database!</p>
+    <p><a href="https://idwnetcloudcomputing.com" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
 </div>
 
 <div class="row">
     <div class="col-md-4">
         <h2>Getting started</h2>
         <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
+            Two files have been created on your desktop:
+            <br />rsa (contains RSA private key, KEEP THIS PRIVATE!)
+            <br />rsa_pub (contains your public key; used to validate your identity to our database system)
         </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+        <p><a class="btn btn-default" href="https://idwnetcloudcomputing.com/docs">View documentation &raquo;</a></p>
     </div>
     <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+        <h2>Publishing this website to a web server</h2>
+        <p>If you wish to publish this site to a web server, edit the key_path field in IDWReg.cs to point to the path to your private key on your web server. If you wish to authenticate to our database system on a remote website, your private key will have to be uploaded to your web host.</p>
+        <p><a class="btn btn-default" id="openbtn">Open in Visual Studio &raquo;</a></p>
     </div>
     <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
+        <h2>Manage your database</h2>
+        <p>You can add and remove encryption keys, change account passwords, and more through our easy-to-use portal interface!</p>
+        <p><a class="btn btn-default" href="https://idwnetcloudcomputing.com/Portal">Portal &raquo;</a></p>
     </div>
 </div>
