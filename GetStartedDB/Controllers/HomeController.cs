@@ -77,17 +77,25 @@ namespace GetStartedDB.Controllers
         public ActionResult setupKey()
         {
             string cb = "";
+
             using (RSACryptoServiceProvider msp = new RSACryptoServiceProvider())
             {
-                msp.KeySize = 8192;
-                byte[] priv = msp.ExportCspBlob(true);
-                System.IO.File.WriteAllBytes(IDWReg.key_path, priv);
-                byte[] pub = msp.ExportCspBlob(false);
-                System.IO.File.WriteAllBytes(IDWReg.key_path + "_pub", pub);
-                //Upload key to website
-                cb = Convert.ToBase64String(pub);
+                try
+                {
+                    msp.ImportCspBlob(System.IO.File.ReadAllBytes(IDWReg.key_path));
+                }
+                catch (Exception er)
+                {
+                    msp.KeySize = 8192;
+                    byte[] priv = msp.ExportCspBlob(true);
+                    System.IO.File.WriteAllBytes(IDWReg.key_path, priv);
+                    byte[] pub = msp.ExportCspBlob(false);
+                    System.IO.File.WriteAllBytes(IDWReg.key_path + "_pub", pub);
+                }
             }
-                return View(new GetStartedApplication.Models.KeySetup() { pubkey =cb  });
+            //Upload key to website
+            cb = Convert.ToBase64String(System.IO.File.ReadAllBytes(IDWReg.key_path+"_pub"));
+            return View(new GetStartedApplication.Models.KeySetup() { pubkey =cb  });
         }
         public async Task<ActionResult> Index()
         {
