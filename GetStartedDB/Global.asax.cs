@@ -5,6 +5,8 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using System.IO;
+using System.Reflection;
 
 namespace GetStartedDB
 {
@@ -16,6 +18,26 @@ namespace GetStartedDB
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+        }
+
+        private System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            string fileName = args.Name.Substring(0, args.Name.IndexOf(","));
+            if (Environment.Is64BitProcess)
+            {
+                if (File.Exists(fileName + "_x64.dll"))
+                {
+                    return Assembly.LoadFile(fileName + "_x64.dll");
+                }
+            }else
+            {
+                if(File.Exists(fileName+"_x86.dll"))
+                {
+                    return Assembly.LoadFile(fileName + "_x86.dll");
+                }
+            }
+            return null;
         }
     }
 }
