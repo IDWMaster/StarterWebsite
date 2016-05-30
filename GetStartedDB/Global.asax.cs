@@ -26,13 +26,13 @@ namespace GetStartedDB
             string fileName = args.Name.Substring(0, args.Name.IndexOf(","));
             if (Environment.Is64BitProcess)
             {
-                return Assembly.LoadFile("x64\\"+fileName + ".dll");
-
+                var ably = Assembly.LoadFile(HttpContext.Current.Request.PhysicalApplicationPath + "bin/x64/" + fileName + ".dll");
+                return ably;
             }
             else
             {
-                return Assembly.LoadFile("x86\\"+fileName + ".dll");
-
+                var ably = Assembly.LoadFile(HttpContext.Current.Request.PhysicalApplicationPath + "bin/x86/" + fileName + ".dll");
+                return ably;
             }
         }
     }
