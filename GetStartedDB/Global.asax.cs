@@ -26,18 +26,14 @@ namespace GetStartedDB
             string fileName = args.Name.Substring(0, args.Name.IndexOf(","));
             if (Environment.Is64BitProcess)
             {
-                if (File.Exists(fileName + "_x64.dll"))
-                {
-                    return Assembly.LoadFile(fileName + "_x64.dll");
-                }
-            }else
-            {
-                if(File.Exists(fileName+"_x86.dll"))
-                {
-                    return Assembly.LoadFile(fileName + "_x86.dll");
-                }
+                return Assembly.LoadFile("x64\\"+fileName + ".dll");
+
             }
-            return null;
+            else
+            {
+                return Assembly.LoadFile("x86\\"+fileName + ".dll");
+
+            }
         }
     }
 }
