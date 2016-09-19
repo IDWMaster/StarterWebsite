@@ -57,7 +57,7 @@ namespace GetStartedDB.Controllers
                     using (DatabaseClient client = await DBConnect())
                     {
                         await client.ConnectAsync();
-                        await IDWDBClient.DBQuery.CreateTableQuery("users").InsertOrUpdate(new IDWDBClient.DataRow[] { new IDWDBClient.DataRow() { PK = reg.UserName.ToLower() }.AddColumn("FirstName", reg.FirstName).AddColumn("LastName", reg.LastName).AddColumn("Password", password).AddColumn("Salt", salt) }).Execute(client, (rows) => true);
+                        await client.RunQuery(new TableQuery("users").InsertOrReplace(new DataRow(reg.UserName.ToLower()).AddColumn("FirstName", reg.FirstName).AddColumn("LastName", reg.LastName).AddColumn("Password", password).AddColumn("Salt", salt)),(rows) => true);
                         DataRow session = await GetSession();
                         session.AddColumn("UserName", reg.UserName.ToLower());
                         await UpdateSession(session);

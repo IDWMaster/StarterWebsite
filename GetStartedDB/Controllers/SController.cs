@@ -27,9 +27,16 @@ namespace GetStartedDB.Controllers
             using (var db = await DBConnect())
             {
                 DataRow userInformation = null;
-                await DBQuery.CreateTableQuery("sessions").PointRetrieve(new string[] { Request.Cookies["SessionID"].Value }).Join("users", "UserName").Execute(db, (rows) =>
+                await db.RunQuery(new TableQuery("sessions").Retrieve(Request.Cookies["SessionID"].Value), async rows =>
                 {
-                    userInformation = rows.First();
+                    using (var client = await DBConnect())
+                    {
+                        await client.RunQuery(new TableQuery("users").Retrieve(rows.First()["UserName"]), users =>
+                        {
+                            userInformation = users.First();
+                            return true;
+                        });
+                    }
                     return true;
                 });
                 return userInformation;
@@ -42,7 +49,7 @@ namespace GetStartedDB.Controllers
                 DataRow session = null;
                 if (Request.Cookies["SessionID"] != null)
                 {
-                    await IDWDBClient.DBQuery.CreateTableQuery("sessions").PointRetrieve(new string[] { Request.Cookies["SessionID"].Value }).Execute(db, (rows) =>
+                    await db.RunQuery(new TableQuery("sessions").Retrieve(Request.Cookies["SessionID"].Value), (rows) =>
                     {
                         session = rows.First();
                         return true;
@@ -50,11 +57,11 @@ namespace GetStartedDB.Controllers
                 }
                 if (session == null)
                 {
-                    session = new IDWDBClient.DataRow();
+
                     string sessionID = Guid.NewGuid().ToString();
-                    session.PK = sessionID;
+                    session = new DataRow(sessionID);
                     Response.Cookies.Add(new HttpCookie("SessionID", sessionID));
-                    await DBQuery.CreateTableQuery("sessions").InsertOrUpdate(new IDWDBClient.DataRow[] { session }).Execute(db, rows => true);
+                    await db.RunQuery(new TableQuery("sessions").InsertOrReplace(new IDWDBClient.DataRow[] { session }), rows => true);
 
                 }
                 return session;
@@ -64,7 +71,7 @@ namespace GetStartedDB.Controllers
         {
             using (var db = await DBConnect())
             {
-                await DBQuery.CreateTableQuery("sessions").InsertOrUpdate(new IDWDBClient.DataRow[] { session }).Execute(db, (rows) => true);
+                await db.RunQuery(new TableQuery("sessions").InsertOrReplace(new IDWDBClient.DataRow[] { session }), (rows) => true);
             }
         }
     

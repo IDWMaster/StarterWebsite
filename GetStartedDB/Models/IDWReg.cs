@@ -61,7 +61,7 @@ namespace GetStartedApplication.Models
                 var ctx = System.Threading.SynchronizationContext.Current;
                 System.Threading.SynchronizationContext.SetSynchronizationContext(null);
                 client.ConnectAsync().Wait();
-                var tsk = IDWDBClient.DBQuery.CreateTableQuery("users").PointRetrieve(new string[] { username }).Execute(client, (rows) => {
+                var tsk = client.RunQuery(new TableQuery("users").Retrieve(username.ToLower()), (rows) => {
                     found = true;
                     return true;
                 });
@@ -84,7 +84,7 @@ namespace GetStartedApplication.Models
                 var ctx = System.Threading.SynchronizationContext.Current;
                 System.Threading.SynchronizationContext.SetSynchronizationContext(null);
                 client.ConnectAsync().Wait();
-                var tsk = IDWDBClient.DBQuery.CreateTableQuery("users").PointRetrieve(new string[] { username }).Execute(client, (rows) => {
+                var tsk = client.RunQuery(new TableQuery("users").Retrieve(username), (rows) => {
                     boat = rows.First();
                     return true;
                 });
@@ -96,10 +96,10 @@ namespace GetStartedApplication.Models
             {
                 return msg;
             }
-            using (Rfc2898DeriveBytes mderive = new Rfc2898DeriveBytes(Password, boat["Salt"].Value as byte[]))
+            using (Rfc2898DeriveBytes mderive = new Rfc2898DeriveBytes(Password, boat["Salt"] as byte[]))
             {
                 byte[] s = mderive.GetBytes(32);
-                byte[] realPassword = boat["Password"].Value as byte[];
+                byte[] realPassword = boat["Password"] as byte[];
 
                 for (int i = 0; i < s.Length; i++)
                 {
