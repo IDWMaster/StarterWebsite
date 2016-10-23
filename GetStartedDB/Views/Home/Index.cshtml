@@ -12,18 +12,18 @@
 <div class="jumbotron">
     @if (Model == null)
     {
-    <h2>Hello, @IDWReg.AccountFriendlyName! Welcome to IDWDB!</h2>
-    }else
+        <h2>Hello, @IDWReg.AccountFriendlyName! Welcome to IDWDB!</h2>
+    }
+    else
     {
-        <h2>Welcome; @(Model["FirstName"].Value+" "+Model["LastName"].Value)</h2>
+        <h2>Welcome; @(Model["FirstName"] + " " + Model["LastName"])</h2>
     }
     <p class="lead">IDWDB is a highly-scalable, performant, easy-to-use NoSQL database!</p>
     @if (Model == null)
     {
-    <p><a href="@Url.Action("Login")" class="btn btn-primary btn-lg">Login &raquo;</a> or <a href="@Url.Action("CreateAccount")" class="btn btn-primary btn-lg">Create Account &raquo;</a></p>
+        <p><a href="@Url.Action("Login")" class="btn btn-primary btn-lg">Login &raquo;</a> or <a href="@Url.Action("CreateAccount")" class="btn btn-primary btn-lg">Create Account &raquo;</a></p>
     }
 </div>
-
 <div class="row">
     <div class="col-md-4">
         <h2>Getting started</h2>
